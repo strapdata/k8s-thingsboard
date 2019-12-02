@@ -1,0 +1,67 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: tb-coap-transport
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tb-coap-transport
+  template:
+    metadata:
+      labels:
+        app: tb-coap-transport
+    spec:
+      volumes:
+        - name: tb-coap-transport-config
+          configMap:
+            name: tb-coap-transport-config
+            items:
+            - key: conf
+              path:  tb-coap-transport.conf
+            - key: logback
+              path:  logback.xml
+      containers:
+      - name: server
+        imagePullPolicy: Always
+        image: thingsboard/tb-coap-transport:latest
+        ports:
+        - containerPort: 5683
+          name: coap
+          protocol: UDP
+        env:
+        - name: CLUSTER_NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: TB_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: COAP_BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: COAP_BIND_PORT
+          value: "5683"
+        - name: COAP_TIMEOUT
+          value: "10000"
+        - name: TB_KAFKA_SERVERS
+          value: "tb-kafka:9092"
+        volumeMounts:
+          - mountPath: /config
+            name: tb-coap-transport-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tb-coap-transport
+spec:
+  type: LoadBalancer
+  selector:
+    app: tb-coap-transport
+  ports:
+  - port: 5683
+    name: coap
+    protocol: UDP
+---
