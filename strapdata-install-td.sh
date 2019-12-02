@@ -26,7 +26,9 @@ data:
 EOF
 
 
-helm install --name ${CLUSTER_NAME}-${DATACENTER_NAME} --namespace $NAMESPACE -f /home/eric/strapdata/dev/customer/orchid/values-datacenter-thingsboard.yml /home/eric/strapdata/dev/strapkop/helm/src/main/helm/elassandra-datacenter/
+# helm install --name ${CLUSTER_NAME}-${DATACENTER_NAME} --namespace $NAMESPACE -f /home/eric/strapdata/dev/customer/orchid/values-datacenter-thingsboard.yml /home/eric/strapdata/dev/strapkop/helm/src/main/helm/elassandra-datacenter/
+
+helm install --name ${CLUSTER_NAME}-${DATACENTER_NAME} --namespace $NAMESPACE -f values-datacenter-thingsboard.yml https://strapdata.blob.core.windows.net/charts/elassandra-datacenter-0.2.0.tgz
 
 sleep 20
 
