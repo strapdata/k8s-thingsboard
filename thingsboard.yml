@@ -202,7 +202,7 @@ kind: Deployment
 metadata:
   name: tb-node
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tb-node
@@ -289,7 +289,7 @@ kind: Deployment
 metadata:
   name: tb-mqtt-transport
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tb-mqtt-transport
@@ -362,7 +362,7 @@ kind: Deployment
 metadata:
   name: tb-http-transport
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tb-http-transport
@@ -434,7 +434,7 @@ kind: Deployment
 metadata:
   name: tb-web-ui
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tb-web-ui
