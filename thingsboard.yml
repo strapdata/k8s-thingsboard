@@ -179,7 +179,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: thingsboard/tb-js-executor:latest
+        image: store/thingsboard/tb-pe-js-executor:latest
         env:
         - name: REMOTE_JS_EVAL_REQUEST_TOPIC
           value: "js.eval.requests"
@@ -223,7 +223,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: thingsboard/tb-node:latest
+        image: store/thingsboard/tb-pe-node:latest
         ports:
         - containerPort: 8080
           name: http
@@ -258,6 +258,13 @@ spec:
           value: "tb-redis"
         - name: HTTP_LOG_CONTROLLER_ERROR_STACK_TRACE
           value: "false"
+        - name: REPORTS_SERVER_ENDPOINT_URL
+          value: "https://tb-web-report.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com/"
+        - name: TB_LICENSE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tb-license-secret
+              key: license-secret
         envFrom:
         - configMapRef:
             name: tb-node-db-config
@@ -310,7 +317,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: thingsboard/tb-mqtt-transport:latest
+        image: store/thingsboard/tb-pe-mqtt-transport:latest
         ports:
         - containerPort: 1883
           name: mqtt
@@ -383,7 +390,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: thingsboard/tb-http-transport:latest
+        image: store/thingsboard/tb-pe-http-transport:latest
         ports:
         - containerPort: 8080
           name: http
@@ -446,7 +453,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: thingsboard/tb-web-ui:latest
+        image: store/thingsboard/tb-pe-web-ui:latest
         ports:
         - containerPort: 8080
           name: http
@@ -484,4 +491,62 @@ spec:
   ports:
   - port: 8080
     name: http
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: tb-web-report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tb-web-report
+  template:
+    metadata:
+      labels:
+        app: tb-web-report
+    spec:
+      containers:
+        - name: server
+          imagePullPolicy: Always
+          image: store/thingsboard/tb-pe-web-report:latest
+          ports:
+            - containerPort: 8383
+              name: http
+          env:
+            - name: HTTP_BIND_ADDRESS
+              value: "0.0.0.0"
+            - name: HTTP_BIND_PORT
+              value: "8383"
+            - name: LOGGER_LEVEL
+              value: "info"
+            - name: LOG_FOLDER
+              value: "logs"
+            - name: LOGGER_FILENAME
+              value: "tb-web-report-%DATE%.log"
+            - name: DOCKER_MODE
+              value: "true"
+            - name: DEFAULT_PAGE_NAVIGATION_TIMEOUT
+              value: "120000"
+            - name: DASHBOARD_LOAD_WAIT_TIME
+              value: "3000"
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tb-web-report
+spec:
+  type: ClusterIP
+  selector:
+    app: tb-web-report
+  ports:
+    - port: 8383
+      name: http
 ---
