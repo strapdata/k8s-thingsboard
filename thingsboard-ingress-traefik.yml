@@ -9,29 +9,49 @@ metadata:
     ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-  - http:
-      paths:
-      - path: /api/v1/
-        backend:
-          serviceName: tb-http-transport
-          servicePort: 8080
-      - path: /static/rulenode/
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /static/
-        backend:
-          serviceName: tb-web-ui
-          servicePort: 8080
-      - path: /index.html
-        backend:
-          serviceName: tb-web-ui
-          servicePort: 8080
-#      - path: /
-#        backend:
-#          serviceName: tb-web-ui
-#          servicePort: 8080
-      - path: /
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
+    - host: tb-http-transport.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
+      http:
+        paths:
+          - path: /api/v1/
+            backend:
+              serviceName: tb-http-transport
+              servicePort: 8080
+    - host: tb-node.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
+      http:
+        paths:
+          - path: /static/rulenode/
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+          - path: /
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+    - host: tb-web-ui.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
+      http:
+        paths:
+          - path: /api/v1/
+            backend:
+              serviceName: tb-http-transport
+              servicePort: 8080
+          - path: /static/rulenode/
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+          - path: /static/
+            backend:
+              serviceName: tb-web-ui
+              servicePort: 8080
+          - path: /index.html
+            backend:
+              serviceName: tb-web-ui
+              servicePort: 8080
+          - path: /
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+  tls:
+    - hosts:
+        - tb-http-transport.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
+        - tb-node.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
+        - tb-web-ui.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com
