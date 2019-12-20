@@ -3,9 +3,11 @@
 set -xe
 
 # export useful env variables
-export NAMESPACE="default"
-export DATACENTER_NAME="dc1"
-export CLUSTER_NAME="cl1"
+export NAMESPACE=${TB_NAMESPACE:-"default"}
+export DATACENTER_NAME=${TB_DATACENTER_NAME:"dc1"}
+export CLUSTER_NAME=${TB_CLUSTER_NAME:"testthingsboard"}
+export TRAEFIK=${TB_TRAEFIK:"true"}
+export USE_COAP=${TB_COAP:"false"}
 
 #######################################
 
