@@ -1,12 +1,12 @@
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: elassandra-cl1-dc1-user-config
+      name: elassandra-testthingsboard-dc1-user-config
       labels:
         app: elassandra
-        cluster: cl1 
-        datacenter: dc1 
-        parent: elassandra-cl1-dc1
+        cluster: testthingsboard
+        datacenter: dc1
+        parent: elassandra-testthingsboard-dc1
     data:
       cassandra_yaml_d_user_config_overrides_yaml: |
         enable_materialized_views: true

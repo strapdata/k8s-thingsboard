@@ -13,11 +13,10 @@ workload: "WRITE"
 image:
   elassandraRepository: strapdata.azurecr.io/strapdata/elassandra-node-dev
   sidecarRepository: strapdata.azurecr.io/strapdata/elassandra-sidecar-dev
-  elassandraTag: 6.2.3.22-rc1
-  sidecarTag: 6.2.3.22-rc1
+  tag: 6.2.3.24-rc1
 
 imagePullPolicy: Always
-imagePullSecret: ""
+imagePullSecret: ["strapregistry"]
 
 #kibanaImage: localhost:32000/kibana/kibana-oss:6.2.3
 # TODO: we do not support unprivileged setup yet
@@ -45,7 +44,7 @@ enterprise:
   ssl: false
   aaa:
     enabled: false
-    audit: true
+    audit: false
   cbs: false
 
 # Elassandra datacenter.group
@@ -79,7 +78,7 @@ enterprise:
 # Custom configmap that defines the ConfigMap key (relative to /etc/cassandra) -> path mappings.
 # Example:
 userConfigMapVolumeSource:
-  name: elassandra-cl1-dc1-user-config 
+  name: elassandra-testthingsboard-dc1-user-config
   items:
   - key: cassandra_yaml_d_user_config_overrides_yaml
     path: cassandra.yaml.d/009-user_config_overrides.yaml
@@ -96,9 +95,9 @@ userConfigMapVolumeSource:
 #restoreFromBackup: backup-hostname
 
 # Cassandra reaper
-reaperEnabled: false
 reaper:
   image: strapdata.azurecr.io/strapdata/cassandra-reaper
+  enabled: false
 
 # Elassandra datacenter group
 # datacenterGroup:
@@ -114,11 +113,9 @@ storagePort: 37000
 sslStoragePort: 37001
 nativePort: 39042
 jmxPort: 7199
+jmxmpEnabled: false
 jdbPort: 4242
 remoteSeeds: []
-
-kibanaSpaces:
-  - name: ""
 
 
 # Override some config files in /etc/cassandra
