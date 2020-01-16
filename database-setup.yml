@@ -20,23 +20,65 @@ metadata:
   name: tb-db-setup
 spec:
   volumes:
-  - name: tb-node-config
-    configMap:
-      name: tb-node-config
-      items:
-      - key: conf
-        path: thingsboard.conf
-      - key: logback
-        path: logback.xml
+    - name: tb-node-config
+      configMap:
+        name: tb-node-config
+        items:
+          - key: conf
+            path:  thingsboard.conf
+          - key: logback
+            path:  logback.xml
+    - name: tbnode-ca-pub
+      secret:
+        secretName: ca-pub
+        items:
+          - key: cacert.pem
+            path: cacert.pem
+    - name: merged-cacerts
+      emptyDir: {}
+  initContainers:
+    - name: merge-certificats
+      imagePullPolicy: Always
+      image: store/thingsboard/tb-pe-node:2.4.3PE
+      terminationMessagePolicy: "FallbackToLogsOnError"
+      volumeMounts:
+        - mountPath: /tmp/tbnode-truststore-to-import/
+          name: tbnode-ca-pub
+        - mountPath: /tmp/tbnode-truststore/
+          name: merged-cacerts
+      command: ['sh', '-c', 'cp  $JAVA_HOME/jre/lib/security/cacerts /tmp/tbnode-truststore/
+      && keytool -import -trustcacerts -keystore /tmp/tbnode-truststore/cacerts -storepass changeit -noprompt -file /tmp/tbnode-truststore-to-import/cacert.pem ;']
   containers:
   - name: tb-db-setup
     imagePullPolicy: Always
-    image: thingsboard/tb-node:latest
+    image: store/thingsboard/tb-pe-node:2.4.3PE
+    env:
+      - name: CASSANDRA_USE_CREDENTIALS
+        value: "true"
+      - name: CASSANDRA_USE_SSL
+        value: "true"
+      - name: CASSANDRA_USERNAME
+        value: "admin"
+      - name: CASSANDRA_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            # make this name dynamic
+            name: elassandra-orchid
+            key: cassandra.admin_password
+      - name: TB_LICENSE_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: tb-license-secret
+            key: license-secret
     envFrom:
-    - configMapRef:
-        name: tb-node-db-config
+      - configMapRef:
+          name: tb-node-db-config
     volumeMounts:
       - mountPath: /config
         name: tb-node-config
+      - mountPath: /tmp/tbnode-truststore/
+        name: merged-cacerts
     command: ['sh', '-c', 'while [ ! -f /install-finished ]; do sleep 2; done;']
   restartPolicy: Never
+  imagePullSecrets:
+  - name: dockerhub

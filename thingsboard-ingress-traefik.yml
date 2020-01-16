@@ -50,8 +50,16 @@ spec:
             backend:
               serviceName: tb-node
               servicePort: 8080
+    - host: tb-web-report.orchid.azure.strapcloud.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: tb-web-report
+              servicePort: 8383
   tls:
     - hosts:
         - tb-http-transport.orchid.azure.strapcloud.com
         - tb-node.orchid.azure.strapcloud.com
         - tb-web-ui.orchid.azure.strapcloud.com
+        - tb-web-report.orchid.azure.strapcloud.com

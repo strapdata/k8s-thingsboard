@@ -35,17 +35,17 @@ dataVolumeClaim:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 64Gi
+      storage: 128Gi
 
 enterprise:
   enabled: true
   jmx: true
-  https: false
-  ssl: false
+  https: true
+  ssl: true
   aaa:
-    enabled: false
-    audit: false
-  cbs: false
+    enabled: true
+    audit: true
+  cbs: true
 
 # Elassandra datacenter.group
 #datacenterGroup:
@@ -104,8 +104,8 @@ reaper:
 
 prometheusEnabled: false
 elasticsearchEnabled: true
-ssl: false
-authentication: NONE
+ssl: true
+authentication: CASSANDRA
 
 hostPortEnabled: false
 hostNetworkEnabled: false

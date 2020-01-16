@@ -28,6 +28,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         image: zookeeper:3.5
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 2181
         readinessProbe:
@@ -71,6 +72,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         image: wurstmeister/kafka:2.12-2.2.1
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 9092
         readinessProbe:
@@ -132,6 +134,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         image: redis:4.0
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 6379
         readinessProbe:
@@ -179,7 +182,8 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: store/thingsboard/tb-pe-js-executor:latest
+        image: store/thingsboard/tb-pe-js-executor:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
         env:
         - name: REMOTE_JS_EVAL_REQUEST_TOPIC
           value: "js.eval.requests"
@@ -196,6 +200,8 @@ spec:
         - name: SCRIPT_BODY_TRACE_FREQUENCY
           value: "1000"
       restartPolicy: Always
+      imagePullSecrets:
+      - name: dockerhub
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -216,14 +222,35 @@ spec:
           configMap:
             name: tb-node-config
             items:
-            - key: conf
-              path:  thingsboard.conf
-            - key: logback
-              path:  logback.xml
+              - key: conf
+                path:  thingsboard.conf
+              - key: logback
+                path:  logback.xml
+        - name: tbnode-ca-pub
+          secret:
+            secretName: ca-pub
+            items:
+              - key: cacert.pem
+                path: cacert.pem
+        - name: merged-cacerts
+          emptyDir: {}
+      initContainers:
+      - name: merge-certificats
+        imagePullPolicy: Always
+        image: store/thingsboard/tb-pe-node:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
+        volumeMounts:
+          - mountPath: /tmp/tbnode-truststore-to-import/
+            name: tbnode-ca-pub
+          - mountPath: /tmp/tbnode-truststore/
+            name: merged-cacerts
+        command: ['sh', '-c', 'cp  $JAVA_HOME/jre/lib/security/cacerts /tmp/tbnode-truststore/
+        && keytool -import -trustcacerts -keystore /tmp/tbnode-truststore/cacerts -storepass changeit -noprompt -file /tmp/tbnode-truststore-to-import/cacert.pem ;']
       containers:
       - name: server
         imagePullPolicy: Always
-        image: store/thingsboard/tb-pe-node:latest
+        image: store/thingsboard/tb-pe-node:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 8080
           name: http
@@ -259,7 +286,19 @@ spec:
         - name: HTTP_LOG_CONTROLLER_ERROR_STACK_TRACE
           value: "false"
         - name: REPORTS_SERVER_ENDPOINT_URL
-          value: "https://tb-web-report.941a7aa2-kube2-azure-northeurope.azure.strapcloud.com/"
+          value: "https://tb-web-report.orchid.azure.strapcloud.com/"
+        - name: CASSANDRA_USE_CREDENTIALS
+          value: "true"
+        - name: CASSANDRA_USE_SSL
+          value: "true"
+        - name: CASSANDRA_USERNAME
+          value: "admin"
+        - name: CASSANDRA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              # make this name dynamic
+              name: elassandra-orchid
+              key: cassandra.admin_password
         - name: TB_LICENSE_SECRET
           valueFrom:
             secretKeyRef:
@@ -271,6 +310,8 @@ spec:
         volumeMounts:
           - mountPath: /config
             name: tb-node-config
+          - mountPath: /tmp/tbnode-truststore/
+            name: merged-cacerts
         livenessProbe:
           httpGet:
             path: /login
@@ -278,6 +319,8 @@ spec:
           initialDelaySeconds: 120
           timeoutSeconds: 10
       restartPolicy: Always
+      imagePullSecrets:
+      - name: dockerhub
 ---
 apiVersion: v1
 kind: Service
@@ -317,7 +360,8 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: store/thingsboard/tb-pe-mqtt-transport:latest
+        image: store/thingsboard/tb-pe-mqtt-transport:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 1883
           name: mqtt
@@ -350,6 +394,8 @@ spec:
           tcpSocket:
             port: 1883
       restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerhub
 ---
 apiVersion: v1
 kind: Service
@@ -390,7 +436,8 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: store/thingsboard/tb-pe-http-transport:latest
+        image: store/thingsboard/tb-pe-http-transport:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 8080
           name: http
@@ -423,6 +470,8 @@ spec:
           tcpSocket:
             port: 8080
       restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerhub
 ---
 apiVersion: v1
 kind: Service
@@ -453,7 +502,8 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: store/thingsboard/tb-pe-web-ui:latest
+        image: store/thingsboard/tb-pe-web-ui:2.4.3PE
+        terminationMessagePolicy: "FallbackToLogsOnError"
         ports:
         - containerPort: 8080
           name: http
@@ -479,6 +529,8 @@ spec:
           initialDelaySeconds: 120
           timeoutSeconds: 10
       restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerhub
 ---
 apiVersion: v1
 kind: Service
@@ -509,7 +561,8 @@ spec:
       containers:
         - name: server
           imagePullPolicy: Always
-          image: store/thingsboard/tb-pe-web-report:latest
+          image: store/thingsboard/tb-pe-web-report:2.4.3PE
+          terminationMessagePolicy: "FallbackToLogsOnError"
           ports:
             - containerPort: 8383
               name: http
@@ -537,6 +590,8 @@ spec:
             initialDelaySeconds: 120
             timeoutSeconds: 10
       restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerhub
 ---
 apiVersion: v1
 kind: Service
