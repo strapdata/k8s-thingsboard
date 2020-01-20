@@ -232,6 +232,13 @@ spec:
             items:
               - key: cacert.pem
                 path: cacert.pem
+# to allow pod restart register the instance-license.data file in the / path of the container into  a k8s secret
+# and mount this secret in tmp dir then copy the file in the right place with lifecycle hook.
+#  https://www.jeffgeerling.com/blog/2019/mounting-kubernetes-secret-single-file-inside-pod
+#  kubectl cp tb-node-5f665ccb56-s95tz:/instance-license.data instance-license.data   &&   kubectl create secret generic tb-instance-license --from-file=./instance-license.data
+        - name: license-data
+          secret:
+            secretName: tb-instance-license
         - name: merged-cacerts
           emptyDir: {}
       initContainers:
@@ -312,6 +319,18 @@ spec:
             name: tb-node-config
           - mountPath: /tmp/tbnode-truststore/
             name: merged-cacerts
+# to allow pod restart register the instance-license.data file in the / path of the container into  a k8s secret
+# and mount this secret in tmp dir then copy the file in the right place with lifecycle hook.
+#  https://www.jeffgeerling.com/blog/2019/mounting-kubernetes-secret-single-file-inside-pod
+          - mountPath: /tmp/license/
+            name: license-data
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - cp /tmp/license/instance-license.data /instance-license.data
         livenessProbe:
           httpGet:
             path: /login
@@ -583,12 +602,12 @@ spec:
               value: "120000"
             - name: DASHBOARD_LOAD_WAIT_TIME
               value: "3000"
-          livenessProbe:
-            httpGet:
-              path: /index.html
-              port: http
-            initialDelaySeconds: 120
-            timeoutSeconds: 10
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#            initialDelaySeconds: 120
+#            timeoutSeconds: 10
       restartPolicy: Always
       imagePullSecrets:
         - name: dockerhub

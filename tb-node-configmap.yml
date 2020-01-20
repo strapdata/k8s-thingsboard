@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -43,8 +42,8 @@ data:
                       class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
                   <fileNamePattern>/var/log/thingsboard/${TB_HOST}/thingsboard.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
                   <maxFileSize>100MB</maxFileSize>
-                  <maxHistory>30</maxHistory>
-                  <totalSizeCap>3GB</totalSizeCap>
+                  <maxHistory>20</maxHistory>
+                  <totalSizeCap>2GB</totalSizeCap>
               </rollingPolicy>
               <encoder>
                   <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
