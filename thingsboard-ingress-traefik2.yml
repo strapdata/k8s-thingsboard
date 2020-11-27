@@ -1,0 +1,57 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tb-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/use-regex: "true"
+    traefik.ingress.kubernetes.io/rule-type: "PathPrefix"
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: tb-http-transport.app.orchid-solution.fr
+      http:
+        paths:
+          - path: /api/v1/
+            backend:
+              serviceName: tb-http-transport
+              servicePort: 8080
+    - host: tb-node.app.orchid-solution.fr
+      http:
+        paths:
+          - path: /static/rulenode/
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+          - path: /
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+    - host: tb-web-ui.app.orchid-solution.fr
+      http:
+        paths:
+          - path: /api/v1/
+            backend:
+              serviceName: tb-http-transport
+              servicePort: 8080
+          - path: /static/rulenode/
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+          - path: /static/
+            backend:
+              serviceName: tb-web-ui
+              servicePort: 8080
+          - path: /index.html
+            backend:
+              serviceName: tb-web-ui
+              servicePort: 8080
+          - path: /
+            backend:
+              serviceName: tb-node
+              servicePort: 8080
+  tls:
+    - hosts:
+        - tb-http-transport.app.orchid-solution.fr
+        - tb-node.app.orchid-solution.fr
+        - tb-web-ui.app.orchid-solution.fr
